@@ -1,50 +1,40 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <title>자바스크립트로 된 아아희 처리기</title>
-    <script type="text/javascript">
-        msg_coordinate = '위치: ';
-        msg_character = '명령: ';
-        msg_input_number = '숫자를 입력하세요. 실행을 멈추려면 !!!를 입력하세요.';
-        msg_input_character = '글자를 입력하세요. 실행을 멈추려면 [취소]를 누르세요.';
-        txt_stopped = '<font color="red">정지됨<' + '/font>';
-        txt_running = '<font color="green">실행중< ' + '/font>';
-        txt_loaded = '프로그램 로드됨';
-        txt_run = '실행';
-        txt_pause = '일시 정지';
-        txt_continue = '계속';
-    </script>
+    <script type="text/javascript" src="jsaaheui_ko_strings.js"></script>
     <script type="text/javascript" src="jsaaheui.js"></script>
+    <script type="text/javascript" src="jsaaheui_init.js"></script>
+    <style type="text/css">
+        #aaheui, #output {
+            overflow: auto;
+            word-wrap: normal;
+            white-space: pre;
+        }
+    </style>
 </head>
 
 <body>
     <h2>자바스크립트로 된 아아희 처리기</h2>
-    <form action="">
-        <table>
-            <tr>
-                <td valign="top">
-                    <span id="status">자바스크립트가 지원되지 않습니다.</span><br>
-                    <textarea name="aaheui" rows="23" cols="80" style="scrollbar:both;"></textarea><br>
-                    <input type="button" value="초기화" onclick="init()" />
-                    <input id="btn_run" type="button" value="실행" onclick="paused?runCode():pause()" />
-                    <input type="button" value="멈춤" onclick="terminate()" />
-                    <input type="button" value="한 단계만" onclick="runCode(true)" />
-                    <input type="button" value="출력 창 지움" onclick="document.forms[0].output.value=''" /><br>
-                    <textarea name="output" rows="10" cols="80" style="scrollbar:both;"></textarea>
-                </td>
-                <td valign="top">
-                    <input type="checkbox" name="debug" checked="checked" onchange="document.forms[0].dumps.disabled = !(debug=document.forms[0].debug.checked)" />디버그<br>
-                    <textarea name="dumps_cursor" rows="4" cols="20" style="scrollbar:none;"></textarea><br>
-                    <textarea name="dumps_storage" rows="30" cols="20" style="scrollbar:none;"></textarea>
-                </td>
-            </tr>
-        </table>
-    </form>
-
-    <script type="text/javascript">
-        init();
-    </script>
-
+    <table>
+        <tr>
+            <td style="vertical-align: top;">
+                <span id="status">자바스크립트가 지원되지 않습니다.</span><br>
+                <textarea id="aaheui" rows="23" cols="80"></textarea><br>
+                <input type="button" value="초기화" onclick="init();">
+                <input type="button" value="실행" id="btn_run" onclick="paused ? runCode(false) : pause();">
+                <input type="button" value="멈춤" onclick="terminate();">
+                <input type="button" value="한 단계만" onclick="runCode(true);">
+                <input type="button" value="출력 창 지움" onclick="clearOutput();"><br>
+                <textarea id="output" rows="10" cols="80"></textarea>
+            </td>
+            <td style="vertical-align: top;">
+                <input type="checkbox" id="debug" checked="checked">디버그<br>
+                <textarea id="dumps-cursor" rows="4" cols="20" readonly="readonly"></textarea><br>
+                <textarea id="dumps-storage" rows="31" cols="20" readonly="readonly"></textarea>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

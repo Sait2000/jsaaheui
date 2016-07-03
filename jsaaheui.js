@@ -1,67 +1,66 @@
 // constants
 
-// // initial consonants
-// var initc = [
+// var initialConsonants = [
 //     'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ',
 //     'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ',
 // ];
 
-// // vowels
-// var vowel = [
+// var vowels = [
 //     'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ',
 //     'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ',
 //     'ㅡ', 'ㅢ', 'ㅣ',
 // ];
 
-// // final consonants
-// var finalc = [
+// var finalConsonants = [
 //     ' ', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ',
 //     'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ',
 //     'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ',
 // ];
 
 // stroke counts of final consonants
-var finalc_stro = [
+var finalcStroke = [
     0, 2, 4, 4, 2, 5, 5, 3,
     5, 7, 9, 9, 7, 9, 9, 8, 4, 4, 6, 2, 4,
     1, 3, 4, 3, 4, 4, 3,
 ];
 
-// required storage item counts for each commands (initc)
-var required_elem = [0, 0, 2, 2, 2, 2, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 2, 2, 0];
+// required storage item counts for each command (initial consonant)
+var requiredElem = [0, 0, 2, 2, 2, 2, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 2, 2, 0];
 
 // variables
-var codeSpace = null;
-var storages = []; // Array(28)
+var storages = [];
 var storageIndex = 0;
 
+var inputBuffer = '';
+
+var codeSpace = null;
 var x = 0;
 var y = 0;
 var z = 0;
 var dx = 0;
 var dy = 0;
 var dz = 0;
+
 var timer = null;
 // var debug = true;
 var paused = true;
-var halted = true;
-var inputBuffer = '';
+var stopped = true;
 
 // functions
 
-// disassembles a Hangul character into parts
-function haechae(c) {
-    if (c < 0xAC00 || c > 0xD7A3) {
-        return null;
+// storage start
+function initStorage() {
+    // Reset storage index
+    storageIndex = 0;
+    // Reset storages
+    for (var i = 0; i < 28; ++i) {
+        storages[i] = [];
     }
-    c -= 0xAC00;
-    return [Math.floor(c / 588), Math.floor(c / 28) % 21, c % 28];
 }
 
 function push(i, n) {
     switch (i) {
     case 27: // ㅎ
-        // storages[i].push(0); //s Fake value
         break;
     default:
         storages[i].push(n);
@@ -72,7 +71,7 @@ function push(i, n) {
 function pop(i) {
     switch (i) {
     case 21: // ㅇ
-        return storages[i].shift();
+        return storages[21].shift();
     case 27: // ㅎ
         return 0; // Fake value
     default:
@@ -113,12 +112,26 @@ function duplicate(i) {
     }
 }
 
+function generateStorageDebugInfo() {
+    var lines = [];
+    for (var i = 0; i < 28; ++i) {
+        var line = String.fromCharCode(0xC544 + i) + ': ' + storages[i];
+        if (i === storageIndex) {
+            line = '>' + line;
+        }
+        lines.push(line);
+    }
+    return lines.join('\n');
+}
+// storage end
+
+// io start
 function outputNumber(n) {
-    document.forms[0].output.value += String(n);
+    document.getElementById('output').value += String(n);
 }
 
 function outputChar(n) {
-    document.forms[0].output.value += String.fromCharCode(n);
+    document.getElementById('output').value += String.fromCharCode(n);
 }
 
 function inputNumber() {
@@ -129,7 +142,7 @@ function inputNumber() {
                 return null;
             }
             var res = parseInt(inp, 10);
-            if (res === res) {
+            if (res === res) { // !Number.isNaN(res) // i.e. valid integer
                 return res;
             }
         }
@@ -137,115 +150,63 @@ function inputNumber() {
 }
 
 function inputChar() {
-    if (!inputBuffer) {
+    if (inputBuffer === '') {
         var inp = prompt(msg_input_character);
         if (inp == null) {
             return null;
         }
         inputBuffer += inp;
     }
-    if (inputBuffer) {
+    if (inputBuffer !== '') {
         var res = inputBuffer.charCodeAt(0);
         inputBuffer = inputBuffer.substring(1);
         return res;
     }
-    return -1;
+    return -1; // TODO: reverse direction
 }
+// io end
 
-function writeDebugInfo() {
-    if (!document.forms[0].debug.checked) {
-        return;
-    }
-    var cursorStateLines = [];
-    cursorStateLines.push(msg_coordinate + '(' + [x, y, z].join(', ') + ')');
-    cursorStateLines.push(msg_character + codeSpace[z][y].charAt(x));
-    var cursorState = cursorStateLines.join('\n');
-    var storageStateLines = [];
-    for (var i = 0; i < 28; ++i) {
-        var line = String.fromCharCode(0xC544 + i) + ': ' + storages[i];
-        if (i === storageIndex) {
-            line = '>' + line;
+// parse
+function loadCodeSpace() {
+    var source = document.getElementById('aaheui').value;
+    var planes = source.split(/(?:^)ㅡ+(?:\n|$)/m);
+    var space = [];
+    for (var i = 0; i < planes.length; ++i) {
+        var plane = planes[i].split('\n');
+        while (plane.length && !plane[plane.length - 1]) {
+            plane.pop();
         }
-        storageStateLines.push(line);
+        space.push(plane);
     }
-    var storageState = storageStateLines.join('\n');
-    document.forms[0].dumps_cursor.value = cursorState;
-    document.forms[0].dumps_storage.value = storageState;
+    while (space.length && space[space.length - 1].length === 0) {
+        space.pop();
+    }
+    codeSpace = space;
 }
 
-// clear debug info
-function clearDebugInfo() {
-    document.forms[0].dumps_cursor.value = '';
-    document.forms[0].dumps_storage.value = '';
-}
-
-function terminate() {
-    paused = true;
-    halted = true;
-
-    // Stop running code
-    if (timer != null) {
-        clearTimeout(timer);
-        timer = null;
-    }
-
-    // Flush input buffer
-    inputBuffer = '';
-
-    // Reset cursor
+// cursor start
+function initCursor() {
     x = 0;
     y = 0;
     z = 0;
     dx = 0;
     dy = 1;
     dz = 0;
+    updateCursorVelocity();
+}
 
-    // Unload code
-    codeSpace = null;
-
-    // Reset storage index
-    storageIndex = 0;
-    // Reset storages
-    for (var i = 0; i < 28; ++i) {
-        storages[i] = [];
+function moveCursor(backward) {
+    if (backward) {
+        dx = -dx;
+        dy = -dy;
+        dz = -dz;
     }
 
-    document.forms[0].aaheui.disabled = false; // Make code editable
-    document.all.btn_run.value = txt_run; // Return the label to its original state.
-    document.all.status.innerHTML = txt_stopped; // Change status message.
-}
-
-function pause() {
-    paused = true;
-    if (timer != null) {
-        clearTimeout(timer);
-        timer = null;
-    }
-
-    document.all.btn_run.value = txt_continue;
-
-    if (codeSpace != null) {
-        document.all.status.innerHTML = txt_loaded;
-    }
-}
-
-function clearAll() {
-    document.forms[0].output.value = '';
-    clearDebugInfo();
-}
-
-function init() {
-    terminate();
-    clearAll();
-    halted = false;
-}
-
-function moveCursor() {
     x += dx;
     y += dy;
     z += dz;
 
-    // TODO: Implement correct algorithm
+    // FIXME: Implement correct algorithm
     if (dz !== 0) {
         if (z < 0) {
             z = codeSpace.length - 1;
@@ -265,9 +226,15 @@ function moveCursor() {
             x = 0;
         }
     }
+
+    updateCursorVelocity();
 }
 
-function updateCursorVelocity(vowelCode, reverseDirection) {
+function updateCursorVelocity() {
+    var vowelCode = getVowelCode();
+    if (vowelCode == null) {
+        return;
+    }
     var ndx = dx;
     var ndy = dy;
     var ndz = dz;
@@ -346,102 +313,146 @@ function updateCursorVelocity(vowelCode, reverseDirection) {
         ndz = -ndz;
         break;
 
-    /*
-    case 9: // ㅘ
-    case 10: // ㅙ
-    case 11: // ㅚ
-    case 14: // ㅝ
-    case 15: // ㅞ
-    case 16: // ㅟ
-    */
+    // case 9: // ㅘ
+    // case 10: // ㅙ
+    // case 11: // ㅚ
+    // case 14: // ㅝ
+    // case 15: // ㅞ
+    // case 16: // ㅟ
 
     default:
         break;
     }
 
-    if (reverseDirection) {
-        ndx = -ndx;
-        ndy = -ndy;
-        ndz = -ndz;
-    }
     dx = ndx;
     dy = ndy;
     dz = ndz;
 }
 
-function loadCodeSpace() {
-    var source = document.forms[0].aaheui.value;
-    var planes = source.split(/(?:^)ㅡ+(?:\n|$)/m);
-    codeSpace = [];
-    for (var i = 0; i < planes.length; ++i) {
-        var plane = planes[i].split('\n');
-        while (plane.length && !plane[plane.length - 1]) {
-            plane.pop();
-        }
-        codeSpace.push(plane);
+function getVowelCode() {
+    var c = getChar();
+    var ch = haechae(c);
+    if (ch == null) {
+        return undefined;
     }
+    return ch[1];
 }
 
 function getCommand() {
+    var c = getChar();
+    var ch = haechae(c);
+    if (ch == null) {
+        return undefined;
+    }
+    return [ch[0], ch[2]];
+}
+
+function getChar() {
     if (y >= codeSpace[z].length) {
         return undefined;
     }
     if (x >= codeSpace[z][y].length) {
         return undefined;
     }
-    var c = codeSpace[z][y].charCodeAt(x);
-    var ch = haechae(c);
-    return ch;
+    var c = codeSpace[z][y].charAt(x);
+    if (c === '') {
+        return undefined;
+    }
+    return c;
 }
 
-// step; once means whether it executes a single step
-function runCode(once) {
-    document.forms[0].aaheui.disabled = true;
-    if (halted) {
+function generateCursorDebugInfo() {
+    var c = getChar();
+    if (c == null) {
+        c = '';
+    }
+    return [
+        msg_coordinate + '(' + [x, y, z].join(', ') + ')',
+        msg_character + c,
+    ].join('\n');
+}
+
+// disassembles a Hangul character into parts
+function haechae(c) {
+    if (c) { // typeof c === 'string' && c !== ''
+        var cc = c.charCodeAt(0);
+        if (0xAC00 <= cc && cc <= 0xD7A3) {
+            cc -= 0xAC00;
+            return [Math.floor(cc / 588), Math.floor(cc / 28) % 21, cc % 28];
+        }
+    }
+    return undefined;
+}
+
+// cursor end
+
+// engine??
+function runCode(singleStep) {
+    if (stopped) {
         init();
     }
-    if (!once) {
-        document.all.btn_run.value = txt_pause;
+    document.getElementById('aaheui').disabled = true;
+    if (singleStep) {
+        if (!paused) {
+            pause();
+        }
+        document.getElementById('status').innerHTML = txt_paused;
+    } else {
+        document.getElementById('btn_run').value = txt_pause;
         paused = false;
         if (timer != null) {
             clearTimeout(timer);
             timer = null;
         }
-        document.all.status.innerHTML = txt_running;
-    } else {
-        if (!paused) {
-            pause();
-        }
-        document.all.status.innerHTML = txt_loaded;
+        document.getElementById('status').innerHTML = txt_running;
     }
 
-    if (codeSpace == null) { // Load code now
+    if (codeSpace == null) { // load code now
         clearAll();
+
         loadCodeSpace();
+        initCursor();
+
+        initStorage();
     }
 
-    var k = once ? 1 : 100;
+    var execResult = doSteps(singleStep ? 1 : 100);
+    var pauseExec = execResult.pauseExec;
+    var stopExec = execResult.stopExec;
+
+    if (stopExec) {
+        terminate();
+    } else if (pauseExec) {
+        pause();
+    } else if (!singleStep) {
+        timer = setTimeout(runCode, 0);
+    }
+}
+
+function doSteps(k) {
     var pauseExec = false;
     var stopExec = false;
     for (; k > 0 && !pauseExec && !stopExec; --k) {
-        var ch = getCommand();
-        if (ch == null) {
-            moveCursor();
-            continue;
-        }
+        var command = getCommand();
 
         var a;
         var b;
         var inp;
         var reverseDirection = false;
-        if (storages[storageIndex].length < required_elem[ch[0]]) {
+        if (command == null) {
+            ; // noop
+        } else if (storages[storageIndex].length < requiredElem[command[0]]) {
             reverseDirection = true;
         } else {
-            switch (ch[0]) {
+            switch (command[0]) {
             case 2: // ㄴ
                 a = pop(storageIndex);
                 b = pop(storageIndex);
-                push(storageIndex, b / a);
+                if (a === 0) {
+                    reverseDirection = true;
+                } else {
+                    push(storageIndex, (b - b % a) / a);
+                }
                 break;
             case 3: // ㄷ
                 a = pop(storageIndex);
@@ -456,11 +467,15 @@ function runCode(once) {
             case 5: // ㄹ
                 a = pop(storageIndex);
                 b = pop(storageIndex);
-                push(storageIndex, b % a);
+                if (a === 0) {
+                    reverseDirection = true;
+                } else {
+                    push(storageIndex, b % a);
+                }
                 break;
             case 6: // ㅁ
                 a = pop(storageIndex);
-                switch (ch[2]) {
+                switch (command[1]) {
                 case 21: // ㅇ
                     outputNumber(a);
                     break;
@@ -472,7 +487,7 @@ function runCode(once) {
                 }
                 break;
             case 7: // ㅂ
-                switch (ch[2]) {
+                switch (command[1]) {
                 case 21: // ㅇ
                     writeDebugInfo();
                     inp = inputNumber();
@@ -492,7 +507,7 @@ function runCode(once) {
                     }
                     break;
                 default:
-                    push(storageIndex, finalc_stro[ch[2]]);
+                    push(storageIndex, finalcStroke[command[1]]);
                     break;
                 }
                 break;
@@ -500,10 +515,10 @@ function runCode(once) {
                 duplicate(storageIndex);
                 break;
             case 9: // ㅅ
-                storageIndex = ch[2];
+                storageIndex = command[1];
                 break;
             case 10: // ㅆ
-                push(ch[2], pop(storageIndex));
+                push(command[1], pop(storageIndex));
                 break;
             case 12: // ㅈ
                 a = pop(storageIndex);
@@ -540,16 +555,77 @@ function runCode(once) {
 
         writeDebugInfo();
         if (!pauseExec && !stopExec) {
-            updateCursorVelocity(ch[1], reverseDirection);
-            moveCursor();
+            moveCursor(reverseDirection);
         }
     }
 
-    if (stopExec) {
-        terminate();
-    } else if (pauseExec) {
-        pause();
-    } else if (!once) {
-        timer = setTimeout(runCode, 0);
+    return {
+        pauseExec: pauseExec,
+        stopExec: stopExec,
+    };
+}
+
+function writeDebugInfo() {
+    if (!document.getElementById('debug').checked) {
+        return;
     }
+    var cursorState = generateCursorDebugInfo();
+    var storageState = generateStorageDebugInfo();
+    document.getElementById('dumps-cursor').value = cursorState;
+    document.getElementById('dumps-storage').value = storageState;
+}
+
+function clearDebugInfo() {
+    document.getElementById('dumps-cursor').value = '';
+    document.getElementById('dumps-storage').value = '';
+}
+
+function terminate() {
+    paused = true;
+    stopped = true;
+
+    // Stop running code
+    if (timer != null) {
+        clearTimeout(timer);
+        timer = null;
+    }
+
+    // Flush input buffer
+    inputBuffer = '';
+
+    // Unload code
+    codeSpace = null;
+
+    document.getElementById('aaheui').disabled = false; // Make code editable
+    document.getElementById('btn_run').value = txt_run; // Reset the label to its original state.
+    document.getElementById('status').innerHTML = txt_stopped;
+}
+
+function pause() {
+    paused = true;
+    if (timer != null) {
+        clearTimeout(timer);
+        timer = null;
+    }
+
+    document.getElementById('btn_run').value = txt_continue;
+
+    if (codeSpace != null) {
+        document.getElementById('status').innerHTML = txt_paused;
+    }
+}
+
+function init() {
+    terminate();
+    clearAll();
+    stopped = false;
+}
+
+function clearAll() {
+    clearOutput();
+    clearDebugInfo();
+}
+
+function clearOutput() {
+    document.getElementById('output').value = '';
 }
