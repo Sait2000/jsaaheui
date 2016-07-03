@@ -33,13 +33,7 @@ var storageIndex = 0;
 
 var inputBuffer = '';
 
-var codeSpace = null;
-var x = 0;
-var y = 0;
-var z = 0;
-var dx = 0;
-var dy = 0;
-var dz = 0;
+var cursor = null;
 
 var timer = null;
 // var debug = true;
@@ -167,8 +161,7 @@ function inputChar() {
 // io end
 
 // parse
-function loadCodeSpace() {
-    var source = document.getElementById('aaheui').value;
+function parseCodeSpace(source) {
     var planes = source.split(/(?:^)ㅡ+(?:\n|$)/m);
     var space = [];
     for (var i = 0; i < planes.length; ++i) {
@@ -181,27 +174,35 @@ function loadCodeSpace() {
     while (space.length && space[space.length - 1].length === 0) {
         space.pop();
     }
-    codeSpace = space;
+    return space;
 }
 
 // cursor start
-function initCursor() {
-    x = 0;
-    y = 0;
-    z = 0;
-    dx = 0;
-    dy = 1;
-    dz = 0;
-    updateCursorVelocity();
+function Cursor(codeSpace) {
+    this.codeSpace = codeSpace;
+    this.x = 0;
+    this.y = 0;
+    this.z = 0;
+    this.dx = 0;
+    this.dy = 1;
+    this.dz = 0;
+    this.updateVelocity();
 }
 
-function moveCursor(backward) {
+Cursor.prototype.move = function (backward) {
+    var codeSpace = this.codeSpace;
+    var dx = this.dx;
+    var dy = this.dy;
+    var dz = this.dz;
     if (backward) {
-        dx = -dx;
-        dy = -dy;
-        dz = -dz;
+        this.dx = dx = -dx;
+        this.dy = dy = -dy;
+        this.dz = dz = -dz;
     }
 
+    var x = this.x;
+    var y = this.y;
+    var z = this.z;
     x += dx;
     y += dy;
     z += dz;
@@ -227,17 +228,21 @@ function moveCursor(backward) {
         }
     }
 
-    updateCursorVelocity();
-}
+    this.x = x;
+    this.y = y;
+    this.z = z;
 
-function updateCursorVelocity() {
-    var vowelCode = getVowelCode();
+    this.updateVelocity();
+};
+
+Cursor.prototype.updateVelocity = function () {
+    var vowelCode = this.getVowelCode();
     if (vowelCode == null) {
         return;
     }
-    var ndx = dx;
-    var ndy = dy;
-    var ndz = dz;
+    var ndx = this.dx;
+    var ndy = this.dy;
+    var ndz = this.dz;
     switch (vowelCode) {
     case 0: // ㅏ
         ndx = 1;
@@ -324,30 +329,34 @@ function updateCursorVelocity() {
         break;
     }
 
-    dx = ndx;
-    dy = ndy;
-    dz = ndz;
-}
+    this.dx = ndx;
+    this.dy = ndy;
+    this.dz = ndz;
+};
 
-function getVowelCode() {
-    var c = getChar();
+Cursor.prototype.getVowelCode = function () {
+    var c = this.getChar();
     var ch = haechae(c);
     if (ch == null) {
         return undefined;
     }
     return ch[1];
-}
+};
 
-function getCommand() {
-    var c = getChar();
+Cursor.prototype.getCommand = function () {
+    var c = this.getChar();
     var ch = haechae(c);
     if (ch == null) {
         return undefined;
     }
     return [ch[0], ch[2]];
-}
+};
 
-function getChar() {
+Cursor.prototype.getChar = function () {
+    var codeSpace = this.codeSpace;
+    var x = this.x;
+    var y = this.y;
+    var z = this.z;
     if (y >= codeSpace[z].length) {
         return undefined;
     }
@@ -359,17 +368,21 @@ function getChar() {
         return undefined;
     }
     return c;
-}
+};
 
-function generateCursorDebugInfo() {
-    var c = getChar();
+Cursor.prototype.generateDebugInfo = function () {
+    var c = this.getChar();
     if (c == null) {
         c = '';
     }
     return [
-        msg_coordinate + '(' + [x, y, z].join(', ') + ')',
+        msg_coordinate + '(' + [this.x, this.y, this.z].join(', ') + ')',
         msg_character + c,
     ].join('\n');
+};
+
+function initCursor(codeSpace) {
+    cursor = new Cursor(codeSpace);
 }
 
 // disassembles a Hangul character into parts
@@ -407,11 +420,13 @@ function runCode(singleStep) {
         document.getElementById('status').innerHTML = txt_running;
     }
 
-    if (codeSpace == null) { // load code now
+    if (cursor == null) {
         clearAll();
 
-        loadCodeSpace();
-        initCursor();
+        // load code
+        var source = document.getElementById('aaheui').value;
+        var codeSpace = parseCodeSpace(source);
+        initCursor(codeSpace);
 
         initStorage();
     }
@@ -433,7 +448,7 @@ function doSteps(k) {
     var pauseExec = false;
     var stopExec = false;
     for (; k > 0 && !pauseExec && !stopExec; --k) {
-        var command = getCommand();
+        var command = cursor.getCommand();
 
         var a;
         var b;
@@ -555,7 +570,7 @@ function doSteps(k) {
 
         writeDebugInfo();
         if (!pauseExec && !stopExec) {
-            moveCursor(reverseDirection);
+            cursor.move(reverseDirection);
         }
     }
 
@@ -569,7 +584,7 @@ function writeDebugInfo() {
     if (!document.getElementById('debug').checked) {
         return;
     }
-    var cursorState = generateCursorDebugInfo();
+    var cursorState = cursor.generateDebugInfo();
     var storageState = generateStorageDebugInfo();
     document.getElementById('dumps-cursor').value = cursorState;
     document.getElementById('dumps-storage').value = storageState;
@@ -594,7 +609,7 @@ function terminate() {
     inputBuffer = '';
 
     // Unload code
-    codeSpace = null;
+    cursor = null;
 
     document.getElementById('aaheui').disabled = false; // Make code editable
     document.getElementById('btn-run').value = txt_run; // Reset the label to its original state.
