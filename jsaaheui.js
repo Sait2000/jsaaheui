@@ -398,7 +398,7 @@ function runCode(singleStep) {
         }
         document.getElementById('status').innerHTML = txt_paused;
     } else {
-        document.getElementById('btn_run').value = txt_pause;
+        document.getElementById('btn-run').value = txt_pause;
         paused = false;
         if (timer != null) {
             clearTimeout(timer);
@@ -597,7 +597,7 @@ function terminate() {
     codeSpace = null;
 
     document.getElementById('aaheui').disabled = false; // Make code editable
-    document.getElementById('btn_run').value = txt_run; // Reset the label to its original state.
+    document.getElementById('btn-run').value = txt_run; // Reset the label to its original state.
     document.getElementById('status').innerHTML = txt_stopped;
 }
 
@@ -608,7 +608,7 @@ function pause() {
         timer = null;
     }
 
-    document.getElementById('btn_run').value = txt_continue;
+    document.getElementById('btn-run').value = txt_continue;
 
     if (codeSpace != null) {
         document.getElementById('status').innerHTML = txt_paused;

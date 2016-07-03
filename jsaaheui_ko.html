@@ -22,11 +22,11 @@
             <td style="vertical-align: top;">
                 <span id="status">자바스크립트가 지원되지 않습니다.</span><br>
                 <textarea id="aaheui" rows="23" cols="80"></textarea><br>
-                <input type="button" value="초기화" onclick="init();">
-                <input type="button" value="실행" id="btn_run" onclick="paused ? runCode(false) : pause();">
-                <input type="button" value="멈춤" onclick="terminate();">
-                <input type="button" value="한 단계만" onclick="runCode(true);">
-                <input type="button" value="출력 창 지움" onclick="clearOutput();"><br>
+                <input type="button" value="초기화" id="btn-init">
+                <input type="button" value="실행" id="btn-run">
+                <input type="button" value="멈춤" id="btn-stop">
+                <input type="button" value="한 단계만" id="btn-single-step">
+                <input type="button" value="출력 창 지움" id="btn-clear"><br>
                 <textarea id="output" rows="10" cols="80"></textarea>
             </td>
             <td style="vertical-align: top;">
