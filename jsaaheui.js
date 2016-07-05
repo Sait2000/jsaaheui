@@ -1,17 +1,17 @@
 // constants
 
-// var initialConsonants = [
+// var initcTable = [
 //     'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ',
 //     'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ',
 // ];
 
-// var vowels = [
+// var vowelTable = [
 //     'ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ',
 //     'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ',
 //     'ㅡ', 'ㅢ', 'ㅣ',
 // ];
 
-// var finalConsonants = [
+// var finalcTable = [
 //     ' ', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ',
 //     'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ',
 //     'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ',
@@ -24,12 +24,11 @@ var finalcStroke = [
     1, 3, 4, 3, 4, 4, 3,
 ];
 
-// required storage item counts for each command (initial consonant)
-var requiredElem = [0, 0, 2, 2, 2, 2, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 2, 2, 0];
+// number of storage items required for each command (initial consonant)
+var commandArity = [0, 0, 2, 2, 2, 2, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 2, 2, 0];
 
 // variables
-var storages = [];
-var storageIndex = 0;
+var storage = null;
 
 var inputBuffer = '';
 
@@ -43,79 +42,159 @@ var stopped = true;
 // functions
 
 // storage start
-function initStorage() {
-    // Reset storage index
-    storageIndex = 0;
-    // Reset storages
-    for (var i = 0; i < 28; ++i) {
-        storages[i] = [];
+function Storage(stackConstructor, queueConstructor, passageConstructor) {
+    for (var i = 0; i < 28; i++) {
+        var storage;
+        switch (i) {
+        case 21: // ㅇ
+            storage = new queueConstructor();
+            break;
+        case 27: // ㅎ
+            storage = new passageConstructor();
+            break;
+        default:
+            storage = new stackConstructor();
+            break;
+        }
+        this[i] = storage;
     }
+    this.currentStorageIndex = 0;
 }
 
-function push(i, n) {
-    switch (i) {
-    case 27: // ㅎ
-        break;
-    default:
-        storages[i].push(n);
-        break;
-    }
-}
+Storage.prototype.checkSize = function (n) {
+    return this[this.currentStorageIndex].checkSize(n);
+};
 
-function pop(i) {
-    switch (i) {
-    case 21: // ㅇ
-        return storages[21].shift();
-    case 27: // ㅎ
-        return 0; // Fake value
-    default:
-        return storages[i].pop();
-    }
-}
+Storage.prototype.push = function (n) {
+    this[this.currentStorageIndex].push(n);
+};
 
-function swap(i) {
-    var a;
-    var b;
-    switch (i) {
-    case 21: // ㅇ
-        a = storages[21][0];
-        storages[21][0] = storages[21][1];
-        storages[21][1] = a;
-        break;
-    case 27: // ㅎ
-        break;
-    default:
-        a = pop(i);
-        b = pop(i);
-        push(i, a);
-        push(i, b);
-        break;
-    }
-}
+Storage.prototype.pop = function () {
+    return this[this.currentStorageIndex].pop();
+};
 
-function duplicate(i) {
-    switch (i) {
-    case 21: // ㅇ
-        storages[21].unshift(storages[21][0]);
-        break;
-    case 27: // ㅎ
-        break;
-    default:
-        storages[i].push(storages[i][storages[i].length - 1]);
-        break;
-    }
-}
+Storage.prototype.swap = function () {
+    this[this.currentStorageIndex].swap();
+};
 
-function generateStorageDebugInfo() {
+Storage.prototype.duplicate = function () {
+    this[this.currentStorageIndex].duplicate();
+};
+
+Storage.prototype.select = function (n) {
+    this.currentStorageIndex = n;
+};
+
+Storage.prototype.sendTo = function (n) {
+    this[n].push(this[this.currentStorageIndex].pop());
+};
+
+Storage.prototype.generateDebugInfo = function () {
     var lines = [];
+    var currentStorageIndex = this.currentStorageIndex;
     for (var i = 0; i < 28; ++i) {
-        var line = String.fromCharCode(0xC544 + i) + ': ' + storages[i];
-        if (i === storageIndex) {
+        var c = String.fromCharCode(0xC544 + i);
+        var line = c + ': ' + storage[i].generateDebugInfo();
+        if (i === currentStorageIndex) {
             line = '>' + line;
         }
         lines.push(line);
     }
     return lines.join('\n');
+};
+
+function Stack() {
+    this.base = [];
+}
+
+Stack.prototype.checkSize = function (n) {
+    return this.base.length >= n;
+};
+
+Stack.prototype.push = function (n) {
+    this.base.push(n);
+};
+
+Stack.prototype.pop = function () {
+    return this.base.pop();
+};
+
+Stack.prototype.swap = function () {
+    var base = this.base;
+    var a = base.pop();
+    var b = base.pop();
+    base.push(a);
+    base.push(b);
+};
+
+Stack.prototype.duplicate = function () {
+    var base = this.base;
+    base.push(base[base.length - 1]);
+};
+
+Stack.prototype.generateDebugInfo = function () {
+    return this.base.join();
+};
+
+function Queue() {
+    this.base = [];
+}
+
+Queue.prototype.checkSize = function (n) {
+    return this.base.length >= n;
+};
+
+Queue.prototype.push = function (n) {
+    this.base.push(n);
+};
+
+Queue.prototype.pop = function () {
+    return this.base.shift();
+};
+
+Queue.prototype.swap = function () {
+    var base = this.base;
+    var a = base[0];
+    var b = base[1];
+    base[1] = a;
+    base[0] = b;
+};
+
+Queue.prototype.duplicate = function () {
+    var base = this.base;
+    base.unshift(base[0]);
+};
+
+Queue.prototype.generateDebugInfo = function () {
+    return this.base.join();
+};
+
+function NullPassage() {
+}
+
+NullPassage.prototype.checkSize = function (n) {
+    return true;
+};
+
+NullPassage.prototype.push = function (n) {
+};
+
+NullPassage.prototype.pop = function () {
+    return 0;
+};
+
+NullPassage.prototype.swap = function () {
+};
+
+NullPassage.prototype.duplicate = function () {
+};
+
+NullPassage.prototype.generateDebugInfo = function () {
+    return '';
+};
+
+function initStorage() {
+    storage = new Storage(Stack, Queue, NullPassage);
 }
 // storage end
 
@@ -396,7 +475,6 @@ function haechae(c) {
     }
     return undefined;
 }
-
 // cursor end
 
 // engine??
@@ -456,40 +534,40 @@ function doSteps(k) {
         var reverseDirection = false;
         if (command == null) {
             ; // noop
-        } else if (storages[storageIndex].length < requiredElem[command[0]]) {
+        } else if (!storage.checkSize(commandArity[command[0]])) {
             reverseDirection = true;
         } else {
             switch (command[0]) {
             case 2: // ㄴ
-                a = pop(storageIndex);
-                b = pop(storageIndex);
+                a = storage.pop();
+                b = storage.pop();
                 if (a === 0) {
                     reverseDirection = true;
                 } else {
-                    push(storageIndex, (b - b % a) / a);
+                    storage.push((b - b % a) / a);
                 }
                 break;
             case 3: // ㄷ
-                a = pop(storageIndex);
-                b = pop(storageIndex);
-                push(storageIndex, b + a);
+                a = storage.pop();
+                b = storage.pop();
+                storage.push(b + a);
                 break;
             case 4: // ㄸ
-                a = pop(storageIndex);
-                b = pop(storageIndex);
-                push(storageIndex, b * a);
+                a = storage.pop();
+                b = storage.pop();
+                storage.push(b * a);
                 break;
             case 5: // ㄹ
-                a = pop(storageIndex);
-                b = pop(storageIndex);
+                a = storage.pop();
+                b = storage.pop();
                 if (a === 0) {
                     reverseDirection = true;
                 } else {
-                    push(storageIndex, b % a);
+                    storage.push(b % a);
                 }
                 break;
             case 6: // ㅁ
-                a = pop(storageIndex);
+                a = storage.pop();
                 switch (command[1]) {
                 case 21: // ㅇ
                     outputNumber(a);
@@ -509,7 +587,7 @@ function doSteps(k) {
                     if (inp == null) {
                         pauseExec = true;
                     } else {
-                        push(storageIndex, inp);
+                        storage.push(inp);
                     }
                     break;
                 case 27: // ㅎ
@@ -518,40 +596,40 @@ function doSteps(k) {
                     if (inp == null) {
                         pauseExec = true;
                     } else {
-                        push(storageIndex, inp);
+                        storage.push(inp);
                     }
                     break;
                 default:
-                    push(storageIndex, finalcStroke[command[1]]);
+                    storage.push(finalcStroke[command[1]]);
                     break;
                 }
                 break;
             case 8: // ㅃ
-                duplicate(storageIndex);
+                storage.duplicate();
                 break;
             case 9: // ㅅ
-                storageIndex = command[1];
+                storage.select(command[1]);
                 break;
             case 10: // ㅆ
-                push(command[1], pop(storageIndex));
+                storage.sendTo(command[1]);
                 break;
             case 12: // ㅈ
-                a = pop(storageIndex);
-                b = pop(storageIndex);
-                push(storageIndex, b >= a ? 1 : 0);
+                a = storage.pop();
+                b = storage.pop();
+                storage.push(b >= a ? 1 : 0);
                 break;
             case 14: // ㅊ
-                if (pop(storageIndex) === 0) {
+                if (storage.pop() === 0) {
                     reverseDirection = true;
                 }
                 break;
             case 16: // ㅌ
-                a = pop(storageIndex);
-                b = pop(storageIndex);
-                push(storageIndex, b - a);
+                a = storage.pop();
+                b = storage.pop();
+                storage.push(b - a);
                 break;
             case 17: // ㅍ
-                swap(storageIndex);
+                storage.swap();
                 break;
             case 18: // ㅎ
                 stopExec = true;
@@ -585,7 +663,7 @@ function writeDebugInfo() {
         return;
     }
     var cursorState = cursor.generateDebugInfo();
-    var storageState = generateStorageDebugInfo();
+    var storageState = storage.generateDebugInfo();
     document.getElementById('dumps-cursor').value = cursorState;
     document.getElementById('dumps-storage').value = storageState;
 }
