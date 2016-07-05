@@ -25,7 +25,10 @@ var finalcStroke = [
 ];
 
 // number of storage items required for each command (initial consonant)
-var commandArity = [0, 0, 2, 2, 2, 2, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 2, 2, 0];
+var commandArity = [
+    0, 0, 2, 2, 2, 2, 1, 0, 1, 0, 1,
+    0, 2, 0, 1, 0, 2, 2, 0,
+];
 
 // variables
 var storage = null;
