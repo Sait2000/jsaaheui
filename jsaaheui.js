@@ -195,10 +195,6 @@ NullPassage.prototype.duplicate = function () {
 NullPassage.prototype.generateDebugInfo = function () {
     return '';
 };
-
-function initStorage() {
-    storage = new Storage(Stack, Queue, NullPassage);
-}
 // storage end
 
 // io start
@@ -463,10 +459,6 @@ Cursor.prototype.generateDebugInfo = function () {
     ].join('\n');
 };
 
-function initCursor(codeSpace) {
-    cursor = new Cursor(codeSpace);
-}
-
 // disassembles a Hangul character into parts
 function haechae(c) {
     if (c) { // typeof c === 'string' && c !== ''
@@ -507,9 +499,9 @@ function runCode(singleStep) {
         // load code
         var source = document.getElementById('aaheui').value;
         var codeSpace = parseCodeSpace(source);
-        initCursor(codeSpace);
+        cursor = new Cursor(codeSpace);
 
-        initStorage();
+        storage = new Storage(Stack, Queue, NullPassage);
     }
 
     var execResult = doSteps(singleStep ? 1 : 100);
