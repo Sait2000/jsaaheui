@@ -46,7 +46,7 @@ var stopped = true;
 
 // storage start
 function Storage(stackConstructor, queueConstructor, passageConstructor) {
-    for (var i = 0; i < 28; i++) {
+    for (var i = 0; i < 28; ++i) {
         var storage;
         switch (i) {
         case 21: // ㅇ
@@ -504,9 +504,14 @@ function runCode(singleStep) {
         storage = new Storage(Stack, Queue, NullPassage);
     }
 
-    var execResult = doSteps(singleStep ? 1 : 100);
-    var pauseExec = execResult.pauseExec;
-    var stopExec = execResult.stopExec;
+    var k = singleStep ? 1 : 100;
+    var pauseExec = false;
+    var stopExec = false;
+    for (var i = 0; i < k && !pauseExec && !stopExec; ++i) {
+        var stepResult = step();
+        pauseExec = stepResult.pauseExec;
+        stopExec = stepResult.stopExec;
+    }
 
     if (stopExec) {
         terminate();
@@ -517,134 +522,133 @@ function runCode(singleStep) {
     }
 }
 
-function doSteps(k) {
+function step() {
     var pauseExec = false;
     var stopExec = false;
-    for (; k > 0 && !pauseExec && !stopExec; --k) {
-        var command = cursor.getCommand();
 
-        var a;
-        var b;
-        var inp;
-        var reverseDirection = false;
-        if (command == null) {
-            ; // noop
-        } else if (!storage.checkSize(commandArity[command[0]])) {
-            reverseDirection = true;
-        } else {
-            switch (command[0]) {
-            case 2: // ㄴ
-                a = storage.pop();
-                b = storage.pop();
-                if (a === 0) {
-                    reverseDirection = true;
-                } else {
-                    storage.push((b - b % a) / a);
-                }
-                break;
-            case 3: // ㄷ
-                a = storage.pop();
-                b = storage.pop();
-                storage.push(b + a);
-                break;
-            case 4: // ㄸ
-                a = storage.pop();
-                b = storage.pop();
-                storage.push(b * a);
-                break;
-            case 5: // ㄹ
-                a = storage.pop();
-                b = storage.pop();
-                if (a === 0) {
-                    reverseDirection = true;
-                } else {
-                    storage.push(b % a);
-                }
-                break;
-            case 6: // ㅁ
-                a = storage.pop();
-                switch (command[1]) {
-                case 21: // ㅇ
-                    outputNumber(a);
-                    break;
-                case 27: // ㅎ
-                    outputChar(a);
-                    break;
-                default:
-                    break;
-                }
-                break;
-            case 7: // ㅂ
-                switch (command[1]) {
-                case 21: // ㅇ
-                    writeDebugInfo();
-                    inp = inputNumber();
-                    if (inp == null) {
-                        pauseExec = true;
-                    } else {
-                        storage.push(inp);
-                    }
-                    break;
-                case 27: // ㅎ
-                    writeDebugInfo();
-                    inp = inputChar();
-                    if (inp == null) {
-                        pauseExec = true;
-                    } else {
-                        storage.push(inp);
-                    }
-                    break;
-                default:
-                    storage.push(finalcStroke[command[1]]);
-                    break;
-                }
-                break;
-            case 8: // ㅃ
-                storage.duplicate();
-                break;
-            case 9: // ㅅ
-                storage.select(command[1]);
-                break;
-            case 10: // ㅆ
-                storage.sendTo(command[1]);
-                break;
-            case 12: // ㅈ
-                a = storage.pop();
-                b = storage.pop();
-                storage.push(b >= a ? 1 : 0);
-                break;
-            case 14: // ㅊ
-                if (storage.pop() === 0) {
-                    reverseDirection = true;
-                }
-                break;
-            case 16: // ㅌ
-                a = storage.pop();
-                b = storage.pop();
-                storage.push(b - a);
-                break;
-            case 17: // ㅍ
-                storage.swap();
-                break;
-            case 18: // ㅎ
-                stopExec = true;
-                break;
+    var command = cursor.getCommand();
 
-            // case 0: // ㄱ
-            // case 1: // ㄲ
-            // case 11: // ㅇ
-            // case 13: // ㅉ
-            // case 15: // ㅋ
-
+    var a;
+    var b;
+    var inp;
+    var reverseDirection = false;
+    if (command == null) {
+        ; // noop
+    } else if (!storage.checkSize(commandArity[command[0]])) {
+        reverseDirection = true;
+    } else {
+        switch (command[0]) {
+        case 2: // ㄴ
+            a = storage.pop();
+            b = storage.pop();
+            if (a === 0) {
+                reverseDirection = true;
+            } else {
+                storage.push((b - b % a) / a);
+            }
+            break;
+        case 3: // ㄷ
+            a = storage.pop();
+            b = storage.pop();
+            storage.push(b + a);
+            break;
+        case 4: // ㄸ
+            a = storage.pop();
+            b = storage.pop();
+            storage.push(b * a);
+            break;
+        case 5: // ㄹ
+            a = storage.pop();
+            b = storage.pop();
+            if (a === 0) {
+                reverseDirection = true;
+            } else {
+                storage.push(b % a);
+            }
+            break;
+        case 6: // ㅁ
+            a = storage.pop();
+            switch (command[1]) {
+            case 21: // ㅇ
+                outputNumber(a);
+                break;
+            case 27: // ㅎ
+                outputChar(a);
+                break;
             default:
                 break;
             }
-        }
+            break;
+        case 7: // ㅂ
+            switch (command[1]) {
+            case 21: // ㅇ
+                writeDebugInfo();
+                inp = inputNumber();
+                if (inp == null) {
+                    pauseExec = true;
+                } else {
+                    storage.push(inp);
+                }
+                break;
+            case 27: // ㅎ
+                writeDebugInfo();
+                inp = inputChar();
+                if (inp == null) {
+                    pauseExec = true;
+                } else {
+                    storage.push(inp);
+                }
+                break;
+            default:
+                storage.push(finalcStroke[command[1]]);
+                break;
+            }
+            break;
+        case 8: // ㅃ
+            storage.duplicate();
+            break;
+        case 9: // ㅅ
+            storage.select(command[1]);
+            break;
+        case 10: // ㅆ
+            storage.sendTo(command[1]);
+            break;
+        case 12: // ㅈ
+            a = storage.pop();
+            b = storage.pop();
+            storage.push(b >= a ? 1 : 0);
+            break;
+        case 14: // ㅊ
+            if (storage.pop() === 0) {
+                reverseDirection = true;
+            }
+            break;
+        case 16: // ㅌ
+            a = storage.pop();
+            b = storage.pop();
+            storage.push(b - a);
+            break;
+        case 17: // ㅍ
+            storage.swap();
+            break;
+        case 18: // ㅎ
+            stopExec = true;
+            break;
 
-        writeDebugInfo();
-        if (!pauseExec && !stopExec) {
-            cursor.move(reverseDirection);
+        // case 0: // ㄱ
+        // case 1: // ㄲ
+        // case 11: // ㅇ
+        // case 13: // ㅉ
+        // case 15: // ㅋ
+
+        default:
+            break;
         }
+    }
+
+    writeDebugInfo();
+    if (!pauseExec && !stopExec) {
+        cursor.move(reverseDirection);
     }
 
     return {
