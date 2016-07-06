@@ -486,10 +486,7 @@ function runCode(singleStep) {
     } else {
         document.getElementById('btn-run').value = txt_pause;
         paused = false;
-        if (timer != null) {
-            clearTimeout(timer);
-            timer = null;
-        }
+        stopTimer();
         document.getElementById('status').innerHTML = txt_running;
     }
 
@@ -679,10 +676,7 @@ function terminate() {
     stopped = true;
 
     // Stop running code
-    if (timer != null) {
-        clearTimeout(timer);
-        timer = null;
-    }
+    stopTimer();
 
     // Flush input buffer
     inputBuffer = '';
@@ -697,15 +691,19 @@ function terminate() {
 
 function pause() {
     paused = true;
-    if (timer != null) {
-        clearTimeout(timer);
-        timer = null;
-    }
+    stopTimer();
 
     document.getElementById('btn-run').value = txt_continue;
 
-    if (codeSpace != null) {
+    if (cursor != null) {
         document.getElementById('status').innerHTML = txt_paused;
+    }
+}
+
+function stopTimer() {
+    if (timer != null) {
+        clearTimeout(timer);
+        timer = null;
     }
 }
 
