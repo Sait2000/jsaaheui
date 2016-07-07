@@ -44,11 +44,9 @@ var commandArity = [
 ];
 
 // variables
-var storage = null;
+var machine = null;
 
 var inputBuffer = '';
-
-var cursor = null;
 
 var timer = null;
 // var debug = true;
@@ -110,7 +108,7 @@ Storage.prototype.generateDebugInfo = function () {
     var currentStorageIndex = this.currentStorageIndex;
     for (var i = 0; i < 28; ++i) {
         var c = String.fromCharCode(0xC544 + i);
-        var line = c + ': ' + storage[i].generateDebugInfo();
+        var line = c + ': ' + this[i].generateDebugInfo();
         if (i === currentStorageIndex) {
             line = '>' + line;
         }
@@ -503,22 +501,27 @@ function runCode(singleStep) { // eslint-disable-line no-unused-vars
         document.getElementById('status').innerHTML = txt_running;
     }
 
-    if (cursor == null) {
+    if (machine == null) {
         clearAll();
 
         // load code
         var source = document.getElementById('aaheui').value;
         var codeSpace = parseCodeSpace(source);
-        cursor = new Cursor(codeSpace);
+        var cursor = new Cursor(codeSpace);
 
-        storage = new Storage(Stack, Queue, NullPassage);
+        var storage = new Storage(Stack, Queue, NullPassage);
+
+        machine = new Machine({
+            cursor: cursor,
+            storage: storage,
+        });
     }
 
     var k = singleStep ? 1 : 100;
     var pauseExec = false;
     var stopExec = false;
     for (var i = 0; i < k && !pauseExec && !stopExec; ++i) {
-        var stepResult = step();
+        var stepResult = machine.step();
         pauseExec = stepResult.pauseExec;
         stopExec = stepResult.stopExec;
     }
@@ -532,7 +535,15 @@ function runCode(singleStep) { // eslint-disable-line no-unused-vars
     }
 }
 
-function step() {
+function Machine(parts) {
+    this.cursor = parts.cursor;
+    this.storage = parts.storage;
+}
+
+Machine.prototype.step = function () {
+    var cursor = this.cursor;
+    var storage = this.storage;
+
     var pauseExec = false;
     var stopExec = false;
 
@@ -667,14 +678,14 @@ function step() {
         pauseExec: pauseExec,
         stopExec: stopExec,
     };
-}
+};
 
 function writeDebugInfo() {
     if (!document.getElementById('debug').checked) {
         return;
     }
-    var cursorState = cursor.generateDebugInfo();
-    var storageState = storage.generateDebugInfo();
+    var cursorState = machine.cursor.generateDebugInfo();
+    var storageState = machine.storage.generateDebugInfo();
     document.getElementById('dumps-cursor').value = cursorState;
     document.getElementById('dumps-storage').value = storageState;
 }
@@ -695,7 +706,7 @@ function terminate() {
     inputBuffer = '';
 
     // Unload code
-    cursor = null;
+    machine = null;
 
     document.getElementById('aaheui').disabled = false; // Make code editable
     document.getElementById('btn-run').value = txt_run; // Reset the label to its original state.
@@ -708,7 +719,7 @@ function pause() {
 
     document.getElementById('btn-run').value = txt_continue;
 
-    if (cursor != null) {
+    if (machine != null) {
         document.getElementById('status').innerHTML = txt_paused;
     }
 }
