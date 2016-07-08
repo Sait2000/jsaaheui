@@ -51,7 +51,6 @@ var inputBuffer = '';
 var timer = null;
 // var debug = true;
 var paused = true;
-var stopped = true;
 
 // functions
 
@@ -485,9 +484,6 @@ function haechae(c) {
 
 // engine??
 function runCode(singleStep) { // eslint-disable-line no-unused-vars
-    if (stopped) {
-        init();
-    }
     document.getElementById('aaheui').disabled = true;
     if (singleStep) {
         if (!paused) {
@@ -495,9 +491,9 @@ function runCode(singleStep) { // eslint-disable-line no-unused-vars
         }
         document.getElementById('status').innerHTML = txt_paused;
     } else {
-        document.getElementById('btn-run').value = txt_pause;
-        paused = false;
         stopTimer();
+        paused = false;
+        document.getElementById('btn-run').value = txt_pause;
         document.getElementById('status').innerHTML = txt_running;
     }
 
@@ -515,6 +511,8 @@ function runCode(singleStep) { // eslint-disable-line no-unused-vars
             cursor: cursor,
             storage: storage,
         });
+
+        inputBuffer = '';
     }
 
     var k = singleStep ? 1 : 100;
@@ -522,8 +520,8 @@ function runCode(singleStep) { // eslint-disable-line no-unused-vars
     var stopExec = false;
     for (var i = 0; i < k && !pauseExec && !stopExec; ++i) {
         var stepResult = machine.step();
-        pauseExec = stepResult.pauseExec;
-        stopExec = stepResult.stopExec;
+        pauseExec = stepResult;
+        stopExec = machine.stopped;
     }
 
     if (stopExec) {
@@ -538,6 +536,7 @@ function runCode(singleStep) { // eslint-disable-line no-unused-vars
 function Machine(parts) {
     this.cursor = parts.cursor;
     this.storage = parts.storage;
+    this.stopped = false;
 }
 
 Machine.prototype.step = function () {
@@ -546,6 +545,10 @@ Machine.prototype.step = function () {
 
     var pauseExec = false;
     var stopExec = false;
+
+    if (this.stopped) {
+        return true;
+    }
 
     var command = cursor.getCommand();
 
@@ -674,10 +677,11 @@ Machine.prototype.step = function () {
         cursor.move(reverseDirection);
     }
 
-    return {
-        pauseExec: pauseExec,
-        stopExec: stopExec,
-    };
+    if (stopExec) {
+        this.stopped = true;
+    }
+
+    return pauseExec;
 };
 
 function writeDebugInfo() {
@@ -697,13 +701,9 @@ function clearDebugInfo() {
 
 function terminate() {
     paused = true;
-    stopped = true;
 
     // Stop running code
     stopTimer();
-
-    // Flush input buffer
-    inputBuffer = '';
 
     // Unload code
     machine = null;
@@ -729,12 +729,6 @@ function stopTimer() {
         clearTimeout(timer);
         timer = null;
     }
-}
-
-function init() {
-    terminate();
-    clearAll();
-    stopped = false;
 }
 
 function clearAll() {

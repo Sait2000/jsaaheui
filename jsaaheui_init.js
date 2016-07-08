@@ -1,5 +1,5 @@
 /* global
-    init
+    clearAll
     runCode
     pause
     terminate
@@ -13,6 +13,10 @@
         document.addEventListener('DOMContentLoaded', f);
     }
 })(function () {
+    function init() {
+        terminate();
+        clearAll();
+    }
     document.getElementById('btn-init').addEventListener('click', function () {
         init();
     });
