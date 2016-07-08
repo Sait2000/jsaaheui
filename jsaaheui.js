@@ -1,3 +1,16 @@
+/* global
+    msg_coordinate
+    msg_character
+    msg_input_number
+    msg_input_character
+    txt_stopped
+    txt_running
+    txt_paused
+    txt_run
+    txt_pause
+    txt_continue
+*/
+
 // constants
 
 // var initcTable = [
@@ -175,11 +188,11 @@ Queue.prototype.generateDebugInfo = function () {
 function NullPassage() {
 }
 
-NullPassage.prototype.checkSize = function (n) {
+NullPassage.prototype.checkSize = function (/* n */) {
     return true;
 };
 
-NullPassage.prototype.push = function (n) {
+NullPassage.prototype.push = function (/* n */) {
 };
 
 NullPassage.prototype.pop = function () {
@@ -473,7 +486,7 @@ function haechae(c) {
 // cursor end
 
 // engine??
-function runCode(singleStep) {
+function runCode(singleStep) { // eslint-disable-line no-unused-vars
     if (stopped) {
         init();
     }

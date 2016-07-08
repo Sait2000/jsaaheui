@@ -1,3 +1,11 @@
+/* global
+    init
+    runCode
+    pause
+    terminate
+    clearOutput
+    paused
+*/
 (function (f) {
     if (document.readyState !== 'loading'){
         f();
