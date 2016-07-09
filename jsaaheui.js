@@ -551,10 +551,10 @@ function step() {
             switch (initc) {
             case 2: // ㄴ
                 a = storage.pop();
-                b = storage.pop();
                 if (a === 0) {
                     reverseDirection = true;
                 } else {
+                    b = storage.pop();
                     storage.push((b - b % a) / a);
                 }
                 break;
@@ -570,10 +570,10 @@ function step() {
                 break;
             case 5: // ㄹ
                 a = storage.pop();
-                b = storage.pop();
                 if (a === 0) {
                     reverseDirection = true;
                 } else {
+                    b = storage.pop();
                     storage.push(b % a);
                 }
                 break;
