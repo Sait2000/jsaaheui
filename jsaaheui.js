@@ -46,8 +46,6 @@ var commandArity = [
 // variables
 var machine = null;
 
-var inputBuffer = '';
-
 var timer = null;
 // var debug = true;
 var paused = true;
@@ -208,15 +206,23 @@ NullPassage.prototype.generateDebugInfo = function () {
 // storage end
 
 // io start
-function outputNumber(n) {
-    document.getElementById('output').value += String(n);
+function TextareaOutput(textarea) {
+    this.textarea = textarea;
 }
 
-function outputChar(n) {
-    document.getElementById('output').value += String.fromCharCode(n);
+function PromptInput() {
+    this.inputBuffer = '';
 }
 
-function inputNumber() {
+TextareaOutput.prototype.outputNumber = function (n) {
+    this.textarea.value += String(n);
+};
+
+TextareaOutput.prototype.outputChar = function (n) {
+    this.textarea.value += String.fromCharCode(n);
+};
+
+PromptInput.prototype.inputNumber = function () {
     for (;;) {
         var inp = prompt(msg_input_number);
         if (inp != null) {
@@ -229,9 +235,10 @@ function inputNumber() {
             }
         }
     }
-}
+};
 
-function inputChar() {
+PromptInput.prototype.inputChar = function () {
+    var inputBuffer = this.inputBuffer;
     if (inputBuffer === '') {
         var inp = prompt(msg_input_character);
         if (inp == null) {
@@ -241,11 +248,11 @@ function inputChar() {
     }
     if (inputBuffer !== '') {
         var res = inputBuffer.charCodeAt(0);
-        inputBuffer = inputBuffer.substring(1);
+        this.inputBuffer = inputBuffer = inputBuffer.substring(1);
         return res;
     }
     return -1; // TODO: reverse direction
-}
+};
 // io end
 
 // parse
@@ -510,9 +517,9 @@ function runCode(singleStep) { // eslint-disable-line no-unused-vars
         machine = new Machine({
             cursor: cursor,
             storage: storage,
+            in: new PromptInput(),
+            out: new TextareaOutput(document.getElementById('output')),
         });
-
-        inputBuffer = '';
     }
 
     var k = singleStep ? 1 : 100;
@@ -533,9 +540,11 @@ function runCode(singleStep) { // eslint-disable-line no-unused-vars
     }
 }
 
-function Machine(parts) {
-    this.cursor = parts.cursor;
-    this.storage = parts.storage;
+function Machine(components) {
+    this.cursor = components.cursor;
+    this.storage = components.storage;
+    this.in = components.in;
+    this.out = components.out;
     this.stopped = false;
 }
 
@@ -595,10 +604,10 @@ Machine.prototype.step = function () {
                 a = storage.pop();
                 switch (finalc) {
                 case 21: // ㅇ
-                    outputNumber(a);
+                    this.out.outputNumber(a);
                     break;
                 case 27: // ㅎ
-                    outputChar(a);
+                    this.out.outputChar(a);
                     break;
                 default:
                     break;
@@ -608,7 +617,7 @@ Machine.prototype.step = function () {
                 switch (finalc) {
                 case 21: // ㅇ
                     writeDebugInfo();
-                    inp = inputNumber();
+                    inp = this.in.inputNumber();
                     if (inp == null) {
                         pauseExec = true;
                     } else {
@@ -617,7 +626,7 @@ Machine.prototype.step = function () {
                     break;
                 case 27: // ㅎ
                     writeDebugInfo();
-                    inp = inputChar();
+                    inp = this.in.inputChar();
                     if (inp == null) {
                         pauseExec = true;
                     } else {
