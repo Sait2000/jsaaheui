@@ -519,6 +519,7 @@ function runCode(singleStep) { // eslint-disable-line no-unused-vars
             storage: storage,
             in: new PromptInput(),
             out: new TextareaOutput(document.getElementById('output')),
+            debugCallback: writeDebugInfo,
         });
     }
 
@@ -545,12 +546,15 @@ function Machine(components) {
     this.storage = components.storage;
     this.in = components.in;
     this.out = components.out;
+    this.debugCallback = components.debugCallback;
     this.stopped = false;
 }
 
 Machine.prototype.step = function () {
     var cursor = this.cursor;
     var storage = this.storage;
+
+    var debugCallback = this.debugCallback;
 
     var pauseExec = false;
     var stopExec = false;
@@ -616,7 +620,7 @@ Machine.prototype.step = function () {
             case 7: // ㅂ
                 switch (finalc) {
                 case 21: // ㅇ
-                    writeDebugInfo();
+                    debugCallback();
                     inp = this.in.inputNumber();
                     if (inp == null) {
                         pauseExec = true;
@@ -625,7 +629,7 @@ Machine.prototype.step = function () {
                     }
                     break;
                 case 27: // ㅎ
-                    writeDebugInfo();
+                    debugCallback();
                     inp = this.in.inputChar();
                     if (inp == null) {
                         pauseExec = true;
@@ -681,7 +685,7 @@ Machine.prototype.step = function () {
         }
     }
 
-    writeDebugInfo();
+    debugCallback();
     if (!pauseExec && !stopExec) {
         cursor.move(reverseDirection);
     }
