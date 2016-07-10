@@ -1,14 +1,5 @@
 /* global
-    msg_coordinate
-    msg_character
-    msg_input_number
-    msg_input_character
-    txt_stopped
-    txt_running
-    txt_paused
-    txt_run
-    txt_pause
-    txt_continue
+    strings
 */
 
 // constants
@@ -224,7 +215,7 @@ TextareaOutput.prototype.outputChar = function (n) {
 
 PromptInput.prototype.inputNumber = function () {
     for (;;) {
-        var inp = prompt(msg_input_number);
+        var inp = prompt(strings.msgInputNumber);
         if (inp != null) {
             if (inp === '!!!') {
                 return null;
@@ -240,7 +231,7 @@ PromptInput.prototype.inputNumber = function () {
 PromptInput.prototype.inputChar = function () {
     var inputBuffer = this.inputBuffer;
     if (inputBuffer === '') {
-        var inp = prompt(msg_input_character);
+        var inp = prompt(strings.msgInputCharacter);
         if (inp == null) {
             return null;
         }
@@ -471,8 +462,8 @@ Cursor.prototype.generateDebugInfo = function () {
         c = '';
     }
     return [
-        msg_coordinate + '(' + [this.x, this.y, this.z].join(', ') + ')',
-        msg_character + c,
+        strings.msgCoordinate + '(' + [this.x, this.y, this.z].join(', ') + ')',
+        strings.msgCharacter + c,
     ].join('\n');
 };
 
@@ -496,12 +487,12 @@ function runCode(singleStep) { // eslint-disable-line no-unused-vars
         if (!paused) {
             pause();
         }
-        document.getElementById('status').innerHTML = txt_paused;
+        document.getElementById('status').innerHTML = strings.txtPaused;
     } else {
         stopTimer();
         paused = false;
-        document.getElementById('btn-run').value = txt_pause;
-        document.getElementById('status').innerHTML = txt_running;
+        document.getElementById('btn-run').value = strings.txtPause;
+        document.getElementById('status').innerHTML = strings.txtRunning;
     }
 
     if (machine == null) {
@@ -722,18 +713,18 @@ function terminate() {
     machine = null;
 
     document.getElementById('aaheui').disabled = false; // Make code editable
-    document.getElementById('btn-run').value = txt_run; // Reset the label to its original state.
-    document.getElementById('status').innerHTML = txt_stopped;
+    document.getElementById('btn-run').value = strings.txtRun; // Reset the label to its original state.
+    document.getElementById('status').innerHTML = strings.txtStopped;
 }
 
 function pause() {
     paused = true;
     stopTimer();
 
-    document.getElementById('btn-run').value = txt_continue;
+    document.getElementById('btn-run').value = strings.txtContinue;
 
     if (machine != null) {
-        document.getElementById('status').innerHTML = txt_paused;
+        document.getElementById('status').innerHTML = strings.txtPaused;
     }
 }
 
