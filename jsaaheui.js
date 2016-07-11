@@ -247,7 +247,7 @@ PromptInput.prototype.inputChar = function () {
 // io end
 
 // parse
-function parseCodeSpace(source) {
+function parseAaheuiCode(source) {
     var planes = source.split(/(?:^)ㅡ+(?:\n|$)/m);
     var space = [];
     for (var i = 0; i < planes.length; ++i) {
@@ -422,7 +422,7 @@ Cursor.prototype.updateVelocity = function () {
 
 Cursor.prototype.getVowelCode = function () {
     var c = this.getChar();
-    var ch = haechae(c);
+    var ch = disassembleHangul(c);
     if (ch == null) {
         return undefined;
     }
@@ -431,7 +431,7 @@ Cursor.prototype.getVowelCode = function () {
 
 Cursor.prototype.getCommand = function () {
     var c = this.getChar();
-    var ch = haechae(c);
+    var ch = disassembleHangul(c);
     if (ch == null) {
         return undefined;
     }
@@ -468,7 +468,7 @@ Cursor.prototype.generateDebugInfo = function () {
 };
 
 // disassembles a Hangul character into parts
-function haechae(c) {
+function disassembleHangul(c) {
     if (c) { // typeof c === 'string' && c !== ''
         var cc = c.charCodeAt(0);
         if (0xAC00 <= cc && cc <= 0xD7A3) {
@@ -500,7 +500,7 @@ function runCode(singleStep) { // eslint-disable-line no-unused-vars
 
         // load code
         var source = document.getElementById('aaheui').value;
-        var codeSpace = parseCodeSpace(source);
+        var codeSpace = parseAaheuiCode(source);
         var cursor = new Cursor(codeSpace);
 
         var storage = new Storage(Stack, Queue, NullPassage);
