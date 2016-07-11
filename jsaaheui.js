@@ -266,6 +266,7 @@ function parseAaheuiCode(source) {
 // cursor start
 function Cursor(codeSpace) {
     this.codeSpace = codeSpace;
+    this.characterRange = Cursor.findCharacterRange(codeSpace);
     this.x = 0;
     this.y = 0;
     this.z = 0;
@@ -275,8 +276,53 @@ function Cursor(codeSpace) {
     this.updateVelocity();
 }
 
+Cursor.findCharacterRange = function (codeSpace) {
+    var xRanges = {};
+    var yRanges = {};
+    var zRanges = {};
+
+    for (var z = 0; z < codeSpace.length; z++) {
+        for (var y = 0; y < codeSpace[z].length; y++) {
+            for (var x = 0; x < codeSpace[z][y].length; x++) {
+                var xRangeKey = y + ',' + z;
+                var yRangeKey = x + ',' + z;
+                var zRangeKey = x + ',' + y;
+
+                if (xRanges[xRangeKey]) {
+                    var oldXRange = xRanges[xRangeKey];
+                    var newXRange = [Math.min(x, oldXRange[0]), Math.max(x + 1, oldXRange[1])];
+                    xRanges[xRangeKey] = newXRange;
+                } else {
+                    xRanges[xRangeKey] = [x, x + 1];
+                }
+
+                if (yRanges[yRangeKey]) {
+                    var oldYRange = yRanges[yRangeKey];
+                    var newYRange = [Math.min(y, oldYRange[0]), Math.max(y + 1, oldYRange[1])];
+                    yRanges[yRangeKey] = newYRange;
+                } else {
+                    yRanges[yRangeKey] = [y, y + 1];
+                }
+
+                if (zRanges[zRangeKey]) {
+                    var oldZRange = zRanges[zRangeKey];
+                    var newZRange = [Math.min(z, oldZRange[0]), Math.max(z + 1, oldZRange[1])];
+                    zRanges[zRangeKey] = newZRange;
+                } else {
+                    zRanges[zRangeKey] = [z, z + 1];
+                }
+            }
+        }
+    }
+
+    return {
+        x: xRanges,
+        y: yRanges,
+        z: zRanges,
+    };
+};
+
 Cursor.prototype.move = function (backward) {
-    var codeSpace = this.codeSpace;
     var dx = this.dx;
     var dy = this.dy;
     var dz = this.dz;
@@ -289,28 +335,45 @@ Cursor.prototype.move = function (backward) {
     var x = this.x;
     var y = this.y;
     var z = this.z;
-    x += dx;
-    y += dy;
-    z += dz;
 
-    // FIXME: Implement correct algorithm
     if (dz !== 0) {
-        if (z < 0) {
-            z = codeSpace.length - 1;
-        } else if (z >= codeSpace.length) {
-            z = 0;
+        var zRangeKey = x + ',' + y;
+        var zRange = this.characterRange.z[zRangeKey];
+        var zRangeStart = zRange ? zRange[0] : z;
+        var zRangeEnd = zRange ? zRange[1] : z + 1;
+        z += dz;
+        if (z < zRangeStart || z >= zRangeEnd) {
+            if (dz > 0) {
+                z = zRangeStart;
+            } else {
+                z = zRangeEnd - 1;
+            }
         }
     } else if (dy !== 0) {
-        if (y < 0) {
-            y = codeSpace[z].length - 1;
-        } else if (y >= codeSpace[z].length) {
-            y = 0;
+        var yRangeKey = x + ',' + z;
+        var yRange = this.characterRange.y[yRangeKey];
+        var yRangeStart = yRange ? yRange[0] : y;
+        var yRangeEnd = yRange ? yRange[1] : y + 1;
+        y += dy;
+        if (y < yRangeStart || y >= yRangeEnd) {
+            if (dy > 0) {
+                y = yRangeStart;
+            } else {
+                y = yRangeEnd - 1;
+            }
         }
     } else if (dx !== 0) {
-        if (x < 0) {
-            x = codeSpace[z][y].length - 1;
-        } else if (x >= codeSpace[z][y].length) {
-            x = 0;
+        var xRangeKey = y + ',' + z;
+        var xRange = this.characterRange.x[xRangeKey];
+        var xRangeStart = xRange ? xRange[0] : x;
+        var xRangeEnd = xRange ? xRange[1] : x + 1;
+        x += dx;
+        if (x < xRangeStart || x >= xRangeEnd) {
+            if (dx > 0) {
+                x = xRangeStart;
+            } else {
+                x = xRangeEnd - 1;
+            }
         }
     }
 
