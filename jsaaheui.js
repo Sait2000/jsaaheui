@@ -545,7 +545,7 @@ function disassembleHangul(c) {
 
 // engine??
 function runCode(singleStep) { // eslint-disable-line no-unused-vars
-    document.getElementById('aaheui').disabled = true;
+    document.getElementById('source').disabled = true;
     if (singleStep) {
         if (!paused) {
             pause();
@@ -562,7 +562,7 @@ function runCode(singleStep) { // eslint-disable-line no-unused-vars
         clearAll();
 
         // load code
-        var source = document.getElementById('aaheui').value;
+        var source = document.getElementById('source').value;
         var codeSpace = parseAaheuiCode(source);
         var cursor = new Cursor(codeSpace);
 
@@ -775,7 +775,7 @@ function terminate() {
     // Unload code
     machine = null;
 
-    document.getElementById('aaheui').disabled = false; // Make code editable
+    document.getElementById('source').disabled = false; // Make code editable
     document.getElementById('btn-run').value = strings.txtRun; // Reset the label to its original state.
     document.getElementById('status').innerHTML = strings.txtStopped;
 }
