@@ -18,24 +18,28 @@ var timer = null;
 // var debug = true;
 var paused = true;
 
-function init() {
-    terminate();
-    clearAll();
+function setUIPaused() {
+    document.getElementById('source').disabled = true;
+    document.getElementById('btn-run').value = strings.txtContinue;
+    document.getElementById('status').innerHTML = strings.txtPaused;
+}
+
+function setUIRunning() {
+    document.getElementById('source').disabled = true;
+    document.getElementById('btn-run').value = strings.txtPause;
+    document.getElementById('status').innerHTML = strings.txtRunning;
+}
+
+function setUIStopped() {
+    document.getElementById('source').disabled = false;
+    document.getElementById('btn-run').value = strings.txtRun;
+    document.getElementById('status').innerHTML = strings.txtStopped;
 }
 
 function runCode(singleStep) {
-    document.getElementById('source').disabled = true;
-    if (singleStep) {
-        if (!paused) {
-            pause();
-        }
-        document.getElementById('status').innerHTML = strings.txtPaused;
-    } else {
-        stopTimer();
-        paused = false;
-        document.getElementById('btn-run').value = strings.txtPause;
-        document.getElementById('status').innerHTML = strings.txtRunning;
-    }
+    stopTimer();
+    paused = false;
+    setUIRunning();
 
     if (machine == null) {
         clearAll();
@@ -69,8 +73,12 @@ function runCode(singleStep) {
         terminate();
     } else if (pauseExec) {
         pause();
-    } else if (!singleStep) {
-        timer = setTimeout(runCode, 0);
+    } else {
+        if (singleStep) {
+            pause();
+        } else {
+            timer = setTimeout(runCode, 0);
+        }
     }
 }
 
@@ -98,20 +106,14 @@ function terminate() {
     // Unload code
     machine = null;
 
-    document.getElementById('source').disabled = false; // Make code editable
-    document.getElementById('btn-run').value = strings.txtRun; // Reset the label to its original state.
-    document.getElementById('status').innerHTML = strings.txtStopped;
+    setUIStopped();
 }
 
 function pause() {
     paused = true;
     stopTimer();
 
-    document.getElementById('btn-run').value = strings.txtContinue;
-
-    if (machine != null) {
-        document.getElementById('status').innerHTML = strings.txtPaused;
-    }
+    setUIPaused();
 }
 
 function stopTimer() {
@@ -139,7 +141,8 @@ function clearOutput() {
     }
 })(function () {
     document.getElementById('btn-init').addEventListener('click', function () {
-        init();
+        terminate();
+        clearAll();
     });
     document.getElementById('btn-run').addEventListener('click', function () {
         if (paused) {
@@ -158,5 +161,5 @@ function clearOutput() {
         clearOutput();
     });
 
-    init();
+    setUIStopped();
 });
