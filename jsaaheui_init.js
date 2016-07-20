@@ -85,7 +85,7 @@ function runCode(singleStep) {
     }
 }
 
-function writeDebugInfo() {
+function writeDebugInfo(machine) {
     if (!document.getElementById('debug').checked) {
         return;
     }

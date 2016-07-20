@@ -617,7 +617,7 @@ Machine.prototype.step = function () {
             case 7: // ㅂ
                 switch (finalc) {
                 case 21: // ㅇ
-                    debugCallback();
+                    debugCallback(this);
                     inp = this.in.inputNumber();
                     if (inp == null) {
                         pauseExec = true;
@@ -626,7 +626,7 @@ Machine.prototype.step = function () {
                     }
                     break;
                 case 27: // ㅎ
-                    debugCallback();
+                    debugCallback(this);
                     inp = this.in.inputChar();
                     if (inp == null) {
                         pauseExec = true;
@@ -682,7 +682,7 @@ Machine.prototype.step = function () {
         }
     }
 
-    debugCallback();
+    debugCallback(this);
     if (!pauseExec && !stopExec) {
         cursor.move(reverseDirection);
     }
