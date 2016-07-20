@@ -194,8 +194,9 @@ function TextareaOutput(textarea) {
     this.textarea = textarea;
 }
 
-function PromptInput() {
+function PromptInput(messages) {
     this.inputBuffer = '';
+    this.messages = messages;
 }
 
 TextareaOutput.prototype.outputNumber = function (n) {
@@ -208,7 +209,7 @@ TextareaOutput.prototype.outputChar = function (n) {
 
 PromptInput.prototype.inputNumber = function () {
     for (;;) {
-        var inp = prompt(strings.msgInputNumber);
+        var inp = prompt(this.messages.number);
         if (inp != null) {
             if (inp === '!!!') {
                 return null;
@@ -224,7 +225,7 @@ PromptInput.prototype.inputNumber = function () {
 PromptInput.prototype.inputChar = function () {
     var inputBuffer = this.inputBuffer;
     if (inputBuffer === '') {
-        var inp = prompt(strings.msgInputCharacter);
+        var inp = prompt(this.messages.character);
         if (inp == null) {
             return null;
         }

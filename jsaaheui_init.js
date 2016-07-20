@@ -54,7 +54,10 @@ function runCode(singleStep) {
         machine = new Machine({
             cursor: cursor,
             storage: storage,
-            in: new PromptInput(),
+            in: new PromptInput({
+                number: strings.msgInputNumber,
+                character: strings.msgInputCharacter,
+            }),
             out: new TextareaOutput(document.getElementById('output')),
             debugCallback: writeDebugInfo,
         });
