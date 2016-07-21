@@ -89,10 +89,36 @@ function writeDebugInfo(machine) {
     if (!document.getElementById('debug').checked) {
         return;
     }
-    var cursorState = machine.cursor.generateDebugInfo();
-    var storageState = machine.storage.generateDebugInfo();
+    var cursorState = generateCursorDebugInfo(machine.cursor);
+    var storageState = generateStorageDebugInfo(machine.storage);
     document.getElementById('dumps-cursor').value = cursorState;
     document.getElementById('dumps-storage').value = storageState;
+}
+
+function generateStorageDebugInfo(storage) {
+    var lines = [];
+    var currentStorageIndex = storage.currentStorageIndex;
+    for (var i = 0; i < 28; ++i) {
+        var c = String.fromCharCode(0xC544 + i);
+        var line = c + ': ' + storage[i].toArray().join();
+        if (i === currentStorageIndex) {
+            line = '>' + line;
+        }
+        lines.push(line);
+    }
+    return lines.join('\n');
+}
+
+function generateCursorDebugInfo(cursor) {
+    var c = cursor.getChar();
+    if (c == null) {
+        c = '';
+    }
+    var coordinate = [cursor.x, cursor.y, cursor.z];
+    return [
+        strings.msgCoordinate + '(' + coordinate.join(', ') + ')',
+        strings.msgCharacter + c,
+    ].join('\n');
 }
 
 function clearDebugInfo() {

@@ -1,7 +1,3 @@
-/* global
-    strings
-*/
-
 // constants
 
 // var initcTable = [
@@ -84,20 +80,6 @@ Storage.prototype.sendTo = function (n) {
     this[n].push(this[this.currentStorageIndex].pop());
 };
 
-Storage.prototype.generateDebugInfo = function () {
-    var lines = [];
-    var currentStorageIndex = this.currentStorageIndex;
-    for (var i = 0; i < 28; ++i) {
-        var c = String.fromCharCode(0xC544 + i);
-        var line = c + ': ' + this[i].toArray().join();
-        if (i === currentStorageIndex) {
-            line = '>' + line;
-        }
-        lines.push(line);
-    }
-    return lines.join('\n');
-};
-
 function Stack() {
     this.base = [];
 }
@@ -125,10 +107,6 @@ Stack.prototype.swap = function () {
 Stack.prototype.duplicate = function () {
     var base = this.base;
     base.push(base[base.length - 1]);
-};
-
-Stack.prototype.generateDebugInfo = function () {
-    return this.base.join();
 };
 
 Stack.prototype.toArray = function () {
@@ -165,10 +143,6 @@ Queue.prototype.duplicate = function () {
     base.unshift(base[0]);
 };
 
-Queue.prototype.generateDebugInfo = function () {
-    return this.base.join();
-};
-
 Queue.prototype.toArray = function () {
     return this.base.slice();
 };
@@ -191,10 +165,6 @@ NullPassage.prototype.swap = function () {
 };
 
 NullPassage.prototype.duplicate = function () {
-};
-
-NullPassage.prototype.generateDebugInfo = function () {
-    return '';
 };
 
 NullPassage.prototype.toArray = function () {
@@ -524,17 +494,6 @@ Cursor.prototype.getChar = function () {
         return undefined;
     }
     return c;
-};
-
-Cursor.prototype.generateDebugInfo = function () {
-    var c = this.getChar();
-    if (c == null) {
-        c = '';
-    }
-    return [
-        strings.msgCoordinate + '(' + [this.x, this.y, this.z].join(', ') + ')',
-        strings.msgCharacter + c,
-    ].join('\n');
 };
 
 // disassembles a Hangul character into parts
