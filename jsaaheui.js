@@ -89,7 +89,7 @@ Storage.prototype.generateDebugInfo = function () {
     var currentStorageIndex = this.currentStorageIndex;
     for (var i = 0; i < 28; ++i) {
         var c = String.fromCharCode(0xC544 + i);
-        var line = c + ': ' + this[i].generateDebugInfo();
+        var line = c + ': ' + this[i].toArray().join();
         if (i === currentStorageIndex) {
             line = '>' + line;
         }
@@ -131,6 +131,11 @@ Stack.prototype.generateDebugInfo = function () {
     return this.base.join();
 };
 
+Stack.prototype.toArray = function () {
+    return this.base.slice();
+};
+
+
 function Queue() {
     this.base = [];
 }
@@ -164,6 +169,10 @@ Queue.prototype.generateDebugInfo = function () {
     return this.base.join();
 };
 
+Queue.prototype.toArray = function () {
+    return this.base.slice();
+};
+
 function NullPassage() {
 }
 
@@ -186,6 +195,10 @@ NullPassage.prototype.duplicate = function () {
 
 NullPassage.prototype.generateDebugInfo = function () {
     return '';
+};
+
+NullPassage.prototype.toArray = function () {
+    return [];
 };
 // storage end
 
